@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default repository path (adjust if needed)
-DEFAULT_REPO_PATH="/home/mnewport/repos/wyffels/Sales-App"
+DEFAULT_REPO_PATH="/"
 # On WSL, you might need the Linux path directly like above,
 # or translate the Windows path if running Bash outside WSL directly:
 # DEFAULT_REPO_PATH="/mnt/c/path/to/your/repo"
