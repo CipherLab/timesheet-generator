@@ -2,7 +2,7 @@
   "name": "timesheet-generator",
   "displayName": "Timesheet Generator",
   "description": "Generate timesheet entries from Git commits",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/timesheet-generator.git"
@@ -20,6 +20,10 @@
       {
         "command": "extension.generateTimesheet",
         "title": "Generate Timesheet from Commits"
+      },
+      {
+        "command": "extension.generateTimesheetForceFetch",
+        "title": "Generate Timesheet from Commits (Force Fetch)"
       }
     ]
   },

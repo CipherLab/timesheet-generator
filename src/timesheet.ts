@@ -6,7 +6,8 @@ import * as os from "os";
 export async function generateTimesheet(
   repoPath: string,
   dayOffset: number,
-  extensionPath: string
+  extensionPath: string,
+  forceFetch?: boolean
 ): Promise<string> {
   // Create a temporary script file
   const scriptContent = getScriptContent(extensionPath);
@@ -16,15 +17,15 @@ export async function generateTimesheet(
     // Write script to temp file
     fs.writeFileSync(tempScriptPath, scriptContent, { mode: 0o755 });
 
-    // Execute the script
-    const result = cp.execSync(
-      `bash "${tempScriptPath}" -r "${repoPath}" -d ${dayOffset}`,
-      {
-        encoding: "utf8",
-        maxBuffer: 1024 * 1024 * 5, // 5MB buffer
-      }
-    );
-
+    // Build the command with optional -f
+    let cmd = `bash "${tempScriptPath}" -r "${repoPath}" -d ${dayOffset}`;
+    if (forceFetch) {
+      cmd += " -f";
+    }
+    const result = cp.execSync(cmd, {
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024 * 5, // 5MB buffer
+    });
     return result;
   } finally {
     // Clean up temp file

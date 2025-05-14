@@ -9,6 +9,7 @@ A VS Code extension that generates timesheet entries from your Git commits.
 - Copies the result to your clipboard
 - Saves you from the torment of remembering what you did yesterday
 
+
 ## Usage
 
 1. Open your Git repository in VS Code
@@ -17,6 +18,14 @@ A VS Code extension that generates timesheet entries from your Git commits.
 4. Enter the date offset (0 for today, -1 for yesterday, etc.)
 5. Wait for the magic to happen
 6. Paste the generated timesheet into your time tracking system
+
+### Force Fetch Option
+
+You can now use a separate command to force fetch all remote branches (ignoring the branch cache):
+
+- **Generate Timesheet from Commits (Force Fetch)**
+
+This command is available in the Command Palette and will always use the `-f` flag. Use this if you want to refresh your branch data before generating the timesheet.
 
 ## Requirements
 
