@@ -32,6 +32,7 @@ while getopts "fhr:d:a:" opt; do
       ;;
     \? )
       echo "Usage: $0 [-f] [-r repo_path] [-d day_offset] [-a author_index] [-h]"
+      echo "Or just run without options and embrace the chaos. Your choice."
       exit 1
       ;;
   esac
@@ -39,7 +40,7 @@ done
 shift $((OPTIND -1))
 
 # Remains of the debug function - now just a void where error messages go to die
-# (No functions needed here now)
+# (No functions needed here now, just like your hopes and dreams)
 
 # --- Global Helper Function: Animation ---
 show_animation() {
@@ -48,14 +49,18 @@ show_animation() {
     local frames=('⣾' '⣽' '⣻' '⢿' '⡿' '⣟' '⣯' '⣷')
     # Generic messages suitable for various waiting periods
     local messages=(
-        "Still waiting..."
-        "Processing data..."
-        "Fetching information..."
-        "Thinking really hard..."
-        "Almost there..."
-        "Checking the archives..."
-        "Consulting the git gods..."
-        "Wrangling bits and bytes..."
+        "Still waiting... like your PR review request"
+        "Processing data... and questioning life choices"
+        "Fetching information... slower than your manager responds to emails"
+        "Thinking really hard... unlike the person who wrote this commit message"
+        "Almost there... (that's what they all say)"
+        "Checking the archives... and judging past you harshly"
+        "Consulting the git gods... they're laughing at your code"
+        "Wrangling bits and bytes... and your terrible naming conventions"
+        "Excavating digital fossils from your repo..."
+        "Looking for evidence you actually worked today..."
+        "Finding creative ways to make your timesheet look impressive..."
+        "Converting caffeine into commit messages..."
     )
     local count=0
     local message="$initial_message" # Start with the initial message
@@ -88,6 +93,7 @@ if [ "$SHOW_HELP" = true ]; then
     cat << "EOF"
 ╔════════════════════════════════════════════════════════════╗
 ║      GIT ARCHAEOLOGY & ACCOUNTABILITY DISTRIBUTION         ║
+║           (A.K.A. "MAKING TIMESHEET FICTION")             ║
 ╚════════════════════════════════════════════════════════════╝
 
 USAGE: ./git_commits.sh [-f] [-r repo_path] [-d day_offset] [-a author_index] [-h]
@@ -96,30 +102,34 @@ OPTIONS:
 
   -f            Force branch fetching (ignores cache)
                 For when you need to refresh your list of
-                things to never look at
+                things to never look at but desperately need to bill for
 
   -r repo_path  Specify a repository path
                 Because pointing fingers at other directories
-                should be easier
+                should be easier than accepting responsibility
 
   -d day_offset Specify date offset (0 today, -1 yesterday, etc.)
-                Skip the date prompt
+                Skip the date prompt and travel back in time to
+                find evidence you were actually working
 
   -a index      Specify author index (1 for first author, etc.)
-                Skip the author selection prompt
+                Skip the author selection prompt because you already
+                know whose work you're planning to take credit for
 
   -h            Show this help
                 The closest you'll get to actual documentation
+                or meaningful human connection today
 
 This script answers the age-old question: "What did I actually
-do today that I can talk about in standup tomorrow?" by providing
-a clean, timesheet-ready output.
+do today that I can talk about in standup tomorrow without 
+revealing I spent 6 hours on Stack Overflow?"
 
 It also calculates the total time you spent committing, which
-bears no relation to the time you spent actually working.
+bears absolutely no relation to the time you spent actually working
+or staring blankly at your IDE while questioning your career choices.
 
 Note: No git branches were harmed in the execution of this script,
-      though several were thoroughly judged.
+      though several were thoroughly judged and found wanting.
 EOF
     exit 0
 fi
@@ -130,14 +140,16 @@ repo_path="${custom_repo_path:-$DEFAULT_REPO_PATH}"
 # --- Basic Validation ---
 if [ ! -d "$repo_path" ]; then
     echo "Error: Repository directory not found: $repo_path" >&2
+    echo "Did you delete it in a fit of rage? I wouldn't blame you." >&2
     exit 1
 fi
 
 # Change to the repository directory
-cd "$repo_path" || { echo "Error: Could not change directory to $repo_path" >&2; exit 1; }
+cd "$repo_path" || { echo "Error: Could not change directory to $repo_path" >&2; echo "Even the filesystem is avoiding your code now." >&2; exit 1; }
 
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Error: Not a valid Git repository: $repo_path" >&2
+    echo "Just because you put a .git folder somewhere doesn't make it a repository." >&2
     exit 1
 fi
 
@@ -154,25 +166,27 @@ cache_remote_branches() {
 
         if [ "$cache_age" -lt "$cache_timeout" ] && [ "$FORCE_FETCH" = false ]; then
             echo "🧠 Using cached branch data (Cache is $((cache_age / 60)) minutes old). Use -f to force fetch."
+            echo "   Because why waste time fetching when you can waste time elsewhere?"
             return 0
         elif [ "$FORCE_FETCH" = true ]; then
-            echo "🔥 Force fetch enabled! Ignoring cache."
+            echo "🔥 Force fetch enabled! Ignoring cache like you ignore code reviews."
             rm -f "$cache_path"
         else
-            echo "⏰ Cache expired. Fetching fresh data."
+            echo "⏰ Cache expired. Fetching fresh data because even digital cobwebs need dusting."
             rm -f "$cache_path"
         fi
     fi
 
-    echo "🔄 Fetching ALL branches from ALL remotes..."
+    echo "🔄 Fetching ALL branches from ALL remotes... prepare for disappointment."
     { # Run fetch in background to show animation for it too
         git fetch --all --prune
     } &
     local fetch_pid=$!
-    show_animation $fetch_pid "Fetching remote objects..."
+    show_animation $fetch_pid "Fetching remote objects... and other people's bad decisions..."
     wait $fetch_pid
 
     echo "🌱 Creating local tracking branches (if needed)..."
+    echo "   Think of it as adopting orphaned code. So noble of you."
     # Run the branch creation process in the background and create cache
     {
         # Write remote branches to cache first
@@ -208,11 +222,11 @@ cache_remote_branches() {
     } & # End background process block
 
     local branch_pid=$!
-    show_animation $branch_pid "Syncing local branches..." # Pass PID and initial message
+    show_animation $branch_pid "Syncing local branches... like herding digital cats" # Pass PID and initial message
     wait $branch_pid # Wait for the background branch creation to finish
 
-    echo "✅ Branch collection complete."
-    echo "🧠 Branches cached for future script runs."
+    echo "✅ Branch collection complete. Your digital hoard grows."
+    echo "🧠 Branches cached for future script runs. At least something is predictable in your life."
     echo
 }
 
@@ -224,6 +238,7 @@ if [ -n "$day_offset_param" ]; then
     day_offset="$day_offset_param"
 else
     echo "Enter the date (0 today, -1 yesterday, etc.) to filter commits:"
+    echo "Negative numbers go back in time, just like your project deadlines."
     read -r day_offset
     # Default to 0 if empty
     day_offset="${day_offset:-0}"
@@ -231,7 +246,9 @@ fi
 
 # Validate numeric input
 if ! [[ "$day_offset" =~ ^-?[0-9]+$ ]]; then
-   echo "Error: Invalid offset. Please enter an integer." >&2; exit 1
+   echo "Error: Invalid offset. Please enter an integer." >&2
+   echo "Numbers. They're like letters but simpler. Try again." >&2
+   exit 1
 fi
 
 # Calculate target date (YYYY-MM-DD) - Assumes GNU date
@@ -240,26 +257,28 @@ if [ $? -ne 0 ]; then
     # Fallback for non-GNU date (macOS) - less reliable for negative offsets
     target_date=$(date -v"${day_offset}d" '+%Y-%m-%d' 2>/dev/null)
     if [ $? -ne 0 ]; then
-      echo "Error: Could not calculate date. Ensure 'date' command supports relative dates." >&2; exit 1
+      echo "Error: Could not calculate date. Ensure 'date' command supports relative dates." >&2
+      echo "Even time itself refuses to cooperate with you today." >&2
+      exit 1
     fi
 fi
 
-echo "Filtering for date: $target_date"
+echo "Filtering for date: $target_date (a.k.a. 'Proof I Worked Day')"
 
 # Define start and end timestamps for the target date
 start_date="${target_date}T00:00:00"
 end_date="${target_date}T23:59:59"
 
 # --- Author Filtering ---
-echo -e "\nFetching authors..."
+echo -e "\nFetching authors... and their questionable commit histories"
 mapfile -t author_lines < <(git log --all --no-merges --format='%an' | sort | uniq -c | sort -nr) # Use --all instead of --branches
 
 if [ ${#author_lines[@]} -eq 0 ]; then
-    echo "No authors found in the repository."
+    echo "No authors found in the repository. It's either brand new or haunted."
     exit 0
 fi
 
-echo -e "\nUnique authors in the repository:"
+echo -e "\nUnique authors in the repository (ranked by volume, not quality):"
 authors=()
 declare -A author_map # Map index to name
 for i in "${!author_lines[@]}"; do
@@ -269,7 +288,7 @@ for i in "${!author_lines[@]}"; do
     name=$(echo "$line" | sed -e 's/^[[:space:]]*[0-9]*[[:space:]]*//') # Remove leading count and space
     authors+=("$name")
     author_map[$((i+1))]="$name"
-    printf "%d. %s - Commits: %d\n" "$((i+1))" "$name" "$count"
+    printf "%d. %s - Commits: %d (quantity ≠ quality)\n" "$((i+1))" "$name" "$count"
 done
 
 # --- Determine Author Selection ---
@@ -277,7 +296,7 @@ done
 
 if [ -n "$author_index_param" ]; then
     author_index="$author_index_param"
-    echo "Author index specified via -a flag: $author_index"
+    echo "Author index specified via -a flag: $author_index. Taking credit for specific work, I see."
 else
     local_git_user_name=$(git config user.name 2>/dev/null) # Suppress error if not set
     selected_by_git_config=false
@@ -287,15 +306,18 @@ else
             if [ "${authors[$i]}" == "$local_git_user_name" ]; then
                 author_index=$((i+1))
                 echo "Automatically selecting local git user '${authors[$i]}' (index $author_index)."
+                echo "How convenient that you want your own commits. Such modesty."
                 selected_by_git_config=true
                 break
             fi
         done
         if [ "$selected_by_git_config" = false ]; then
-            echo "Warning: Local git user '$local_git_user_name' not found among commit authors for the selected period or has no commits under that name." >&2
+            echo "Warning: Local git user '$local_git_user_name' not found among commit authors." >&2
+            echo "         Either you're a ghost, or you've been slacking." >&2
         fi
     else
         echo "Warning: 'git config user.name' is not set. Unable to select by local git user." >&2
+        echo "         Identity crisis? Or just trying to stay anonymous?" >&2
     fi
 
     if [ "$selected_by_git_config" = false ]; then
@@ -307,6 +329,7 @@ else
             default_prompt_author_name=" for '${authors[0]}'"
         fi
         echo -e "\nEnter the number corresponding to the author (default $default_prompt_author_index$default_prompt_author_name):"
+        echo "Choose wisely. Your timesheet's believability depends on it."
         read -r author_index_input
         author_index="${author_index_input:-$default_prompt_author_index}"
     fi
@@ -314,13 +337,16 @@ fi
 
 # Validate the determined author_index
 if ! [[ "$author_index" =~ ^[0-9]+$ ]] || [ "$author_index" -lt 1 ] || [ "$author_index" -gt ${#authors[@]} ]; then
-   echo "Error: Invalid author number selected or determined: '$author_index'. Please check the author list and your input/config." >&2; exit 1
+   echo "Error: Invalid author number selected or determined: '$author_index'." >&2
+   echo "Numbers are hard. We get it. Try again with a valid selection." >&2
+   exit 1
 fi
 selected_author="${author_map[$author_index]}"
-echo "Selected author for timesheet: $selected_author"
+echo "Selected author for timesheet: $selected_author (Prepare for revelations...)"
 
 # --- Commit Retrieval & Processing ---
 echo -e "\nFetching commits for $selected_author on $target_date..."
+echo "Let's see what you claim to have accomplished..."
 
 # Use a character that should NEVER appear in git commit messages
 # Record Separator (ASCII 30) is ideal for this purpose
@@ -341,7 +367,7 @@ trap 'rm -f "$commit_output_file"' EXIT
 commit_pid=$!
 
 # Show animation while git log runs
-show_animation $commit_pid "Digging through commit history..."
+show_animation $commit_pid "Digging through commit history... unearthing digital regrets..."
 
 # Wait for git log to finish and capture its exit status
 wait $commit_pid
@@ -350,7 +376,7 @@ git_log_exit_status=$?
 # Check if the command failed
 if [ $git_log_exit_status -ne 0 ]; then
     echo "Error: git log command failed while fetching commits (Exit code: $git_log_exit_status)." >&2
-    # Optionally print stderr from git log if captured, but it wasn't here.
+    echo "Even git can't handle your repository. It's that special." >&2
     exit 1
 fi
 
@@ -370,17 +396,19 @@ fi
 # --- Process Commits ---
 if [ ${#commit_details[@]} -eq 0 ]; then
     echo "No commits found for '$selected_author' on $target_date." >&2 # Print this to stderr for console, not clipboard
+    echo "Congratulations on your day of perfect slacking. Masterfully done." >&2
     # Print the original template to stdout for the clipboard
     echo -e "\n╔═════════════════════════════════════════════════════════╗"
     echo -e "║ COMMITS FOR TIMESHEET: $target_date                     "
     echo -e "╚═════════════════════════════════════════════════════════╝"
-    echo "* Branches: N/A"
-    printf "\n* Time logged: 00:00\n"
+    echo "* Branches: N/A (much like your productivity)"
+    printf "\n* Time logged: 00:00 (at least you're honest about something)\n"
     echo -e "╔═════════════════════════════════════════════════════════╗"
-    echo -e "║ END TIMESHEET DATA                                      "
+    echo -e "║ END TIMESHEET DATA (IT'S RATHER EMPTY, LIKE YOUR DAY)   "
     echo -e "╚═════════════════════════════════════════════════════════╝"
     exit 0
 fi
+echo "Sorting and formatting results... transforming chaos into billable hours"
 
 # Always print the clean header
 echo -e "\n╔═════════════════════════════════════════════════════════╗"
@@ -394,7 +422,7 @@ declare -A branch_last_segment_set # Use keys for uniqueness of last segments
 first_commit_timestamp=""
 last_commit_timestamp=""
 
-echo "Associating commits with branches..." # Add progress indicator
+# echo "Associating commits with branches... and questioning your life choices" # Add progress indicator
 
 # Process each commit detail line to find its branches
 processed_count=0
@@ -407,7 +435,7 @@ for details in "${commit_details[@]}"; do
     # Skip commits with "Squashed" in the subject or body
     if [[ "$subject" == *"Squashed"* ]] || [[ "$body_rest" == *"Squashed"* ]]; then
         processed_count=$((processed_count + 1))
-        printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits"
+        printf "\rProcessed %d / %d commits... (skipping squashed commits, as if they never happened)" "$processed_count" "$total_commits"
         continue # Skip to next commit
     fi
 
@@ -415,7 +443,7 @@ for details in "${commit_details[@]}"; do
     if [ -z "$sha" ]; then
         #echo "Skip: Missing SHA in line: $details" >&2 # More informative warning
         #processed_count=$((processed_count + 1))
-        printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits"
+        printf "\rProcessed %d / %d commits... (ignoring identity-challenged commits)" "$processed_count" "$total_commits"
         continue # Skip to next commit
     fi
 
@@ -430,6 +458,7 @@ for details in "${commit_details[@]}"; do
         fi
     else
         echo "WARNING: Invalid timestamp for commit ${sha:0:8}: '$timestamp'" >&2
+        echo "         Even time itself refuses to acknowledge this commit." >&2
         # Try to recover timestamp from datetime if possible
          new_timestamp=$(date -d "$(echo "$datetime" | cut -d' ' -f1,2)" +%s 2>/dev/null)
          if [[ "$new_timestamp" =~ ^[0-9]+$ ]]; then
@@ -461,14 +490,14 @@ for details in "${commit_details[@]}"; do
 
     # Last resort fallback
     if [ ${#branches[@]} -eq 0 ]; then
-        branches=("(no associated branch found)")
+        branches=("(no associated branch found - it's a commit orphan, sad)")
     fi
 
     # Store commit in each branch's commit list
     for branch_name in "${branches[@]}"; do
          # Trim potential whitespace from branch names
          branch_name=$(echo "$branch_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-         effective_branch_name="${branch_name:-"(unknown branch)"}"
+         effective_branch_name="${branch_name:-"(unknown branch - a mystery even to git)"}"
 
          # IMPORTANT: Use a newline separator for commit records within a branch
          # Ensure the 'details' variable itself doesn't end with newline if IFS trimming removed it
@@ -484,18 +513,17 @@ for details in "${commit_details[@]}"; do
          # Track branch name last segments for summary
          last_segment=$(basename "$effective_branch_name" 2>/dev/null || echo "$effective_branch_name")
          # Don't add empty or special names or release branches to segments
-         if [[ -n "$last_segment" && "$last_segment" != "(no associated branch found)" && "$last_segment" != "(unknown branch)" && "$last_segment" != release* ]]; then
+         if [[ -n "$last_segment" && "$last_segment" != "(no associated branch found - it's a commit orphan, sad)" && "$last_segment" != "(unknown branch - a mystery even to git)" && "$last_segment" != release* ]]; then
              branch_last_segment_set["$last_segment"]=1
          fi
     done
 
     processed_count=$((processed_count + 1))
     # Simple progress indicator without animation
-    printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits"
+    printf "\rProcessed %d / %d commits... (judging each one silently)" "$processed_count" "$total_commits"
 done
 printf "\r\033[K" # Clear progress line
 
-echo "Sorting and formatting results..."
 
 # --- Sort Branches by First Commit Time ---
 if [ ${#branch_first_commit_time[@]} -gt 0 ]; then
@@ -534,6 +562,7 @@ for branch_name in "${sorted_branch_names[@]}"; do
         # Validate SHA before proceeding
         if [ -z "$sha" ]; then
             echo "WARNING: Skipping display for commit with missing SHA in final output." >&2
+            echo "         Even this script has standards, apparently." >&2
             continue
         fi
 
@@ -549,12 +578,14 @@ for branch_name in "${sorted_branch_names[@]}"; do
         # Skip invalid entries
         if [ -z "$time_str" ] || [ "$time_str" = "??:??" ]; then
             echo "Skipping commit with invalid time: ${sha:0:8} ($datetime)" >&2
+            echo "Even the space-time continuum rejected this one." >&2
             continue
         fi
         # Ensure subject is not just whitespace
         trimmed_subject=$(echo "$subject" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         if [ -z "$trimmed_subject" ]; then
             echo "Skipping commit with empty subject: ${sha:0:8}" >&2
+            echo "The commit that couldn't even be bothered to explain itself." >&2
             continue
         fi
 
@@ -591,7 +622,7 @@ if [ ${#branch_last_segment_set[@]} -gt 0 ]; then
     distinct_segments_str=$(printf "%s, " "${sorted_last_segments[@]}")
     distinct_segments_str=${distinct_segments_str%, } # Remove trailing comma and space
 else
-    distinct_segments_str="N/A"
+    distinct_segments_str="N/A (branch commitment issues)"
 fi
 
 echo -e "\n* Branches: ${distinct_segments_str}" # Added newline for spacing
@@ -599,7 +630,7 @@ echo -e "\n* Branches: ${distinct_segments_str}" # Added newline for spacing
 
 
 echo -e "╔═════════════════════════════════════════════════════════╗"
-echo -e "║ END TIMESHEET DATA                                      "
+echo -e "║ END TIMESHEET DATA (ACTUAL WORK MAY VARY)               "
 echo -e "╚═════════════════════════════════════════════════════════╝"
 
 
@@ -609,10 +640,11 @@ if [ -n "$first_commit_timestamp" ] && [ -n "$last_commit_timestamp" ] && [[ "$l
     total_hours=$((total_seconds / 3600))
     total_minutes=$(((total_seconds % 3600) / 60))
 
-    printf "\n* Time logged: %02d:%02d\n " "$total_hours" "$total_minutes"
+    printf "\n* Time logged: %02d:%02d \n " "$total_hours" "$total_minutes"
 else
     # Handle cases where timestamps were invalid or missing
     echo "Could not calculate time span due to missing or invalid timestamps." >&2
-    printf "\n* Time logged: 00:00\n"
+    echo "Time itself has disowned your commits. Impressive." >&2
+    printf "\n* Time logged: 00:00 (much like your impact)\n"
 fi
 exit 0
