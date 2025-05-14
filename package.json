@@ -2,7 +2,7 @@
   "name": "timesheet-generator",
   "displayName": "Timesheet Generator",
   "description": "Generate timesheet entries from Git commits",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "cipherlab",
   "repository": {
     "type": "git",
