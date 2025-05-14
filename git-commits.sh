@@ -60,7 +60,7 @@ show_animation() {
     local count=0
     local message="$initial_message" # Start with the initial message
 
-    echo # Newline before animation starts
+    echo >&2 # Newline before animation starts
 
     while ps -p $pid > /dev/null; do
         frame=${frames[count % ${#frames[@]}]}
@@ -70,12 +70,12 @@ show_animation() {
             message=${messages[$((RANDOM % ${#messages[@]}))]}
         fi
 
-        printf "\r\033[K  %s  %s" "$frame" "$message"
+        printf "\r\033[K  %s  %s" "$frame" "$message" >&2
         sleep 0.3
         count=$((count+1))
     done
-    printf "\r\033[K" # Clear the animation line
-    echo # Newline after animation finishes
+    printf "\r\033[K" >&2 # Clear the animation line
+    echo >&2 # Newline after animation finishes
 }
 
 # First positional parameter as repo path if provided and -r not used
@@ -153,18 +153,18 @@ cache_remote_branches() {
         local cache_age=$((current_time - cache_time))
 
         if [ "$cache_age" -lt "$cache_timeout" ] && [ "$FORCE_FETCH" = false ]; then
-            echo "🧠 Using cached branch data (Cache is $((cache_age / 60)) minutes old). Use -f to force fetch."
+            echo "🧠 Using cached branch data (Cache is $((cache_age / 60)) minutes old). Use -f to force fetch." >&2
             return 0
         elif [ "$FORCE_FETCH" = true ]; then
-            echo "🔥 Force fetch enabled! Ignoring cache."
+            echo "🔥 Force fetch enabled! Ignoring cache." >&2
             rm -f "$cache_path"
         else
-            echo "⏰ Cache expired. Fetching fresh data."
+            echo "⏰ Cache expired. Fetching fresh data." >&2
             rm -f "$cache_path"
         fi
     fi
 
-    echo "🔄 Fetching ALL branches from ALL remotes..."
+    echo "🔄 Fetching ALL branches from ALL remotes..." >&2
     { # Run fetch in background to show animation for it too
         git fetch --all --prune
     } &
@@ -172,7 +172,7 @@ cache_remote_branches() {
     show_animation $fetch_pid "Fetching remote objects..."
     wait $fetch_pid
 
-    echo "🌱 Creating local tracking branches (if needed)..."
+    echo "🌱 Creating local tracking branches (if needed)..." >&2
     # Run the branch creation process in the background and create cache
     {
         # Write remote branches to cache first
@@ -211,13 +211,17 @@ cache_remote_branches() {
     show_animation $branch_pid "Syncing local branches..." # Pass PID and initial message
     wait $branch_pid # Wait for the background branch creation to finish
 
-    echo "✅ Branch collection complete."
-    echo "🧠 Branches cached for future script runs."
-    echo
+    echo "✅ Branch collection complete." >&2
+    echo "🧠 Branches cached for future script runs." >&2
+    echo >&2
 }
 
 # --- Fetch ALL Remote Branches ---
 cache_remote_branches
+
+# Redirect stdout to stderr for progress messages
+exec 3>&1 
+exec 1>&2
 
 # --- Date Input ---
 if [ -n "$day_offset_param" ]; then
@@ -336,12 +340,16 @@ fi
 
 # --- Process Commits ---
 if [ ${#commit_details[@]} -eq 0 ]; then
-    echo "No commits found for '$selected_author' on $target_date." >&2 # Print this to stderr for console, not clipboard
-    # Print the original template to stdout for the clipboard
+    echo "No commits found for '$selected_author' on $target_date." >&2 # This ensures it goes to original stderr.
+    # The following echos/printf will go to current fd 1 (which is stderr due to exec 1>&2)
     echo -e "\n╔═════════════════════════════════════════════════════════╗"
     echo -e "║ COMMITS FOR TIMESHEET: $target_date                     "
     echo -e "╚═════════════════════════════════════════════════════════╝"
-    echo "* Branches: N/A"
+    
+    # This specific line needs to go to original stdout (fd 3) for the clipboard
+    echo "* Branches: N/A" >&3
+    
+    # These will go to current fd 1 (which is stderr)
     printf "\n* Time logged: 00:00\n"
     echo -e "╔═════════════════════════════════════════════════════════╗"
     echo -e "║ END TIMESHEET DATA                                      "
@@ -458,11 +466,15 @@ for details in "${commit_details[@]}"; do
 
     processed_count=$((processed_count + 1))
     # Simple progress indicator without animation
-    printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits"
+    printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits" # This will go to current fd 1 (stderr)
 done
-printf "\r\033[K" # Clear progress line
+printf "\r\033[K" # Clear progress line (this will go to current fd 1 (stderr))
 
-echo "Sorting and formatting results..."
+echo "Sorting and formatting results..." # This will go to current fd 1 (stderr)
+
+# Restore stdout for clipboard content
+exec 1>&3 # stdout now points to original stdout
+exec 3>&- # Close fd 3
 
 # --- Sort Branches by First Commit Time ---
 if [ ${#branch_first_commit_time[@]} -gt 0 ]; then
@@ -561,11 +573,14 @@ else
     distinct_segments_str="N/A"
 fi
 
-echo -e "\n* Branches: ${distinct_segments_str}" # Added newline for spacing
+echo -e "\n* Branches: ${distinct_segments_str}" # This goes to restored stdout (clipboard)
+
+# Redirect stdout to stderr for final summary messages
+exec 3>&1 # Save current stdout (original stdout) to fd 3
+exec 1>&2 # Redirect stdout to original stderr
 
 
-
-echo -e "╔═════════════════════════════════════════════════════════╗"
+echo -e "╔═════════════════════════════════════════════════════════╗" # This goes to new stdout (stderr)
 echo -e "║ END TIMESHEET DATA                                      "
 echo -e "╚═════════════════════════════════════════════════════════╝"
 
@@ -580,6 +595,11 @@ if [ -n "$first_commit_timestamp" ] && [ -n "$last_commit_timestamp" ] && [[ "$l
 else
     # Handle cases where timestamps were invalid or missing
     echo "Could not calculate time span due to missing or invalid timestamps." >&2
-    printf "\n* Time logged: 00:00\n"
+    printf "\n* Time logged: 00:00\n" # This goes to new stdout (stderr)
 fi
+
+# Restore original stdout before exiting
+exec 1>&3 # stdout now points to original stdout
+exec 3>&- # Close fd 3
+
 exit 0
