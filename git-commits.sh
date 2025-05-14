@@ -60,7 +60,7 @@ show_animation() {
     local count=0
     local message="$initial_message" # Start with the initial message
 
-    echo >&2 # Newline before animation starts
+    echo # Newline before animation starts
 
     while ps -p $pid > /dev/null; do
         frame=${frames[count % ${#frames[@]}]}
@@ -70,12 +70,12 @@ show_animation() {
             message=${messages[$((RANDOM % ${#messages[@]}))]}
         fi
 
-        printf "\r\033[K  %s  %s" "$frame" "$message" >&2
+        printf "\r\033[K  %s  %s" "$frame" "$message"
         sleep 0.3
         count=$((count+1))
     done
-    printf "\r\033[K" >&2 # Clear the animation line
-    echo >&2 # Newline after animation finishes
+    printf "\r\033[K" # Clear the animation line
+    echo # Newline after animation finishes
 }
 
 # First positional parameter as repo path if provided and -r not used
@@ -153,18 +153,18 @@ cache_remote_branches() {
         local cache_age=$((current_time - cache_time))
 
         if [ "$cache_age" -lt "$cache_timeout" ] && [ "$FORCE_FETCH" = false ]; then
-            echo "🧠 Using cached branch data (Cache is $((cache_age / 60)) minutes old). Use -f to force fetch." >&2
+            echo "🧠 Using cached branch data (Cache is $((cache_age / 60)) minutes old). Use -f to force fetch."
             return 0
         elif [ "$FORCE_FETCH" = true ]; then
-            echo "🔥 Force fetch enabled! Ignoring cache." >&2
+            echo "🔥 Force fetch enabled! Ignoring cache."
             rm -f "$cache_path"
         else
-            echo "⏰ Cache expired. Fetching fresh data." >&2
+            echo "⏰ Cache expired. Fetching fresh data."
             rm -f "$cache_path"
         fi
     fi
 
-    echo "🔄 Fetching ALL branches from ALL remotes..." >&2
+    echo "🔄 Fetching ALL branches from ALL remotes..."
     { # Run fetch in background to show animation for it too
         git fetch --all --prune
     } &
@@ -172,7 +172,7 @@ cache_remote_branches() {
     show_animation $fetch_pid "Fetching remote objects..."
     wait $fetch_pid
 
-    echo "🌱 Creating local tracking branches (if needed)..." >&2
+    echo "🌱 Creating local tracking branches (if needed)..."
     # Run the branch creation process in the background and create cache
     {
         # Write remote branches to cache first
@@ -211,9 +211,9 @@ cache_remote_branches() {
     show_animation $branch_pid "Syncing local branches..." # Pass PID and initial message
     wait $branch_pid # Wait for the background branch creation to finish
 
-    echo "✅ Branch collection complete." >&2
-    echo "🧠 Branches cached for future script runs." >&2
-    echo >&2
+    echo "✅ Branch collection complete."
+    echo "🧠 Branches cached for future script runs."
+    echo
 }
 
 # --- Fetch ALL Remote Branches ---
@@ -223,7 +223,7 @@ cache_remote_branches
 if [ -n "$day_offset_param" ]; then
     day_offset="$day_offset_param"
 else
-    echo "Enter the date (0 today, -1 yesterday, etc.) to filter commits:" >&2
+    echo "Enter the date (0 today, -1 yesterday, etc.) to filter commits:"
     read -r day_offset
     # Default to 0 if empty
     day_offset="${day_offset:-0}"
@@ -244,22 +244,22 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
-echo "Filtering for date: $target_date" >&2
+echo "Filtering for date: $target_date"
 
 # Define start and end timestamps for the target date
 start_date="${target_date}T00:00:00"
 end_date="${target_date}T23:59:59"
 
 # --- Author Filtering ---
-echo -e "\nFetching authors..." >&2
+echo -e "\nFetching authors..."
 mapfile -t author_lines < <(git log --all --no-merges --format='%an' | sort | uniq -c | sort -nr) # Use --all instead of --branches
 
 if [ ${#author_lines[@]} -eq 0 ]; then
-    echo "No authors found in the repository." >&2
+    echo "No authors found in the repository."
     exit 0
 fi
 
-echo -e "\nUnique authors in the repository:" >&2
+echo -e "\nUnique authors in the repository:"
 authors=()
 declare -A author_map # Map index to name
 for i in "${!author_lines[@]}"; do
@@ -269,13 +269,13 @@ for i in "${!author_lines[@]}"; do
     name=$(echo "$line" | sed -e 's/^[[:space:]]*[0-9]*[[:space:]]*//') # Remove leading count and space
     authors+=("$name")
     author_map[$((i+1))]="$name"
-    printf "%d. %s - Commits: %d\n" "$((i+1))" "$name" "$count" >&2
+    printf "%d. %s - Commits: %d\n" "$((i+1))" "$name" "$count"
 done
 
 if [ -n "$author_index_param" ]; then
     author_index="$author_index_param"
 else
-    echo -e "\nEnter the number corresponding to the author (default 1):" >&2
+    echo -e "\nEnter the number corresponding to the author (default 1):"
     read -r author_index
     author_index="${author_index:-1}"
 fi
@@ -284,10 +284,10 @@ if ! [[ "$author_index" =~ ^[0-9]+$ ]] || [ "$author_index" -lt 1 ] || [ "$autho
    echo "Error: Invalid author number." >&2; exit 1
 fi
 selected_author="${author_map[$author_index]}"
-echo "Selected author: $selected_author" >&2
+echo "Selected author: $selected_author"
 
 # --- Commit Retrieval & Processing ---
-echo -e "\nFetching commits for $selected_author on $target_date..." >&2
+echo -e "\nFetching commits for $selected_author on $target_date..."
 
 # Use a character that should NEVER appear in git commit messages
 # Record Separator (ASCII 30) is ideal for this purpose
@@ -336,24 +336,23 @@ fi
 
 # --- Process Commits ---
 if [ ${#commit_details[@]} -eq 0 ]; then
-    echo "No commits found for '$selected_author' on $target_date." >&2
-    echo -e "\n╔═════════════════════════════════════════════════════════╗" >&2
-    echo -e "║ COMMITS FOR TIMESHEET: $target_date                     " >&2
-    echo -e "╚═════════════════════════════════════════════════════════╝" >&2
-    
-    echo "* Branches: N/A" # This goes to STDOUT for clipboard
-    
-    printf "\n* Time logged: 00:00\n" >&2
-    echo -e "╔═════════════════════════════════════════════════════════╗" >&2
-    echo -e "║ END TIMESHEET DATA                                      " >&2
-    echo -e "╚═════════════════════════════════════════════════════════╝" >&2
+    echo "No commits found for '$selected_author' on $target_date." >&2 # Print this to stderr for console, not clipboard
+    # Print the original template to stdout for the clipboard
+    echo -e "\n╔═════════════════════════════════════════════════════════╗"
+    echo -e "║ COMMITS FOR TIMESHEET: $target_date                     "
+    echo -e "╚═════════════════════════════════════════════════════════╝"
+    echo "* Branches: N/A"
+    printf "\n* Time logged: 00:00\n"
+    echo -e "╔═════════════════════════════════════════════════════════╗"
+    echo -e "║ END TIMESHEET DATA                                      "
+    echo -e "╚═════════════════════════════════════════════════════════╝"
     exit 0
 fi
 
 # Always print the clean header
-echo -e "\n╔═════════════════════════════════════════════════════════╗" >&2
-echo -e "║ COMMITS FOR TIMESHEET: $target_date                       " >&2
-echo -e "╚═════════════════════════════════════════════════════════╝" >&2
+echo -e "\n╔═════════════════════════════════════════════════════════╗"
+echo -e "║ COMMITS FOR TIMESHEET: $target_date                       "
+echo -e "╚═════════════════════════════════════════════════════════╝"
 
 declare -A branch_commits # Associative array: branch -> list of commit details strings (newline separated)
 declare -A branch_first_commit_time # Associative array: branch -> earliest timestamp
@@ -362,7 +361,7 @@ declare -A branch_last_segment_set # Use keys for uniqueness of last segments
 first_commit_timestamp=""
 last_commit_timestamp=""
 
-echo "Associating commits with branches..." >&2 # Add progress indicator
+echo "Associating commits with branches..." # Add progress indicator
 
 # Process each commit detail line to find its branches
 processed_count=0
@@ -459,11 +458,11 @@ for details in "${commit_details[@]}"; do
 
     processed_count=$((processed_count + 1))
     # Simple progress indicator without animation
-    printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits" >&2
+    printf "\rProcessed %d / %d commits..." "$processed_count" "$total_commits"
 done
-printf "\r\033[K" >&2 # Clear progress line
+printf "\r\033[K" # Clear progress line
 
-echo "Sorting and formatting results..." >&2
+echo "Sorting and formatting results..."
 
 # --- Sort Branches by First Commit Time ---
 if [ ${#branch_first_commit_time[@]} -gt 0 ]; then
@@ -562,12 +561,13 @@ else
     distinct_segments_str="N/A"
 fi
 
-echo -e "\n* Branches: ${distinct_segments_str}" # This goes to stdout (clipboard)
+echo -e "\n* Branches: ${distinct_segments_str}" # Added newline for spacing
 
 
-echo -e "╔═════════════════════════════════════════════════════════╗" >&2
-echo -e "║ END TIMESHEET DATA                                      " >&2
-echo -e "╚═════════════════════════════════════════════════════════╝" >&2
+
+echo -e "╔═════════════════════════════════════════════════════════╗"
+echo -e "║ END TIMESHEET DATA                                      "
+echo -e "╚═════════════════════════════════════════════════════════╝"
 
 
 # --- Calculate and Print Total Time Span (Clean Format) ---
@@ -576,11 +576,10 @@ if [ -n "$first_commit_timestamp" ] && [ -n "$last_commit_timestamp" ] && [[ "$l
     total_hours=$((total_seconds / 3600))
     total_minutes=$(((total_seconds % 3600) / 60))
 
-    printf "\n* Time logged: %02d:%02d\n " "$total_hours" "$total_minutes" >&2
+    printf "\n* Time logged: %02d:%02d\n " "$total_hours" "$total_minutes"
 else
     # Handle cases where timestamps were invalid or missing
     echo "Could not calculate time span due to missing or invalid timestamps." >&2
-    printf "\n* Time logged: 00:00\n" >&2
+    printf "\n* Time logged: 00:00\n"
 fi
-
 exit 0
