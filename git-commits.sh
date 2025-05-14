@@ -272,19 +272,52 @@ for i in "${!author_lines[@]}"; do
     printf "%d. %s - Commits: %d\n" "$((i+1))" "$name" "$count"
 done
 
+# --- Determine Author Selection ---
+# Priority: 1. -a flag, 2. Local git user, 3. Prompt (defaulting to most frequent)
+
 if [ -n "$author_index_param" ]; then
     author_index="$author_index_param"
+    echo "Author index specified via -a flag: $author_index"
 else
-    echo -e "\nEnter the number corresponding to the author (default 1):"
-    read -r author_index
-    author_index="${author_index:-1}"
+    local_git_user_name=$(git config user.name 2>/dev/null) # Suppress error if not set
+    selected_by_git_config=false
+    if [ -n "$local_git_user_name" ]; then
+        echo "Local git user.name: $local_git_user_name"
+        for i in "${!authors[@]}"; do
+            if [ "${authors[$i]}" == "$local_git_user_name" ]; then
+                author_index=$((i+1))
+                echo "Automatically selecting local git user '${authors[$i]}' (index $author_index)."
+                selected_by_git_config=true
+                break
+            fi
+        done
+        if [ "$selected_by_git_config" = false ]; then
+            echo "Warning: Local git user '$local_git_user_name' not found among commit authors for the selected period or has no commits under that name." >&2
+        fi
+    else
+        echo "Warning: 'git config user.name' is not set. Unable to select by local git user." >&2
+    fi
+
+    if [ "$selected_by_git_config" = false ]; then
+        # Prompt if not selected by -a or git config
+        default_prompt_author_index=1 # Default to the first author (most frequent)
+        # Ensure authors array is not empty before trying to access authors[0]
+        default_prompt_author_name=""
+        if [ ${#authors[@]} -gt 0 ]; then
+            default_prompt_author_name=" for '${authors[0]}'"
+        fi
+        echo -e "\nEnter the number corresponding to the author (default $default_prompt_author_index$default_prompt_author_name):"
+        read -r author_index_input
+        author_index="${author_index_input:-$default_prompt_author_index}"
+    fi
 fi
 
+# Validate the determined author_index
 if ! [[ "$author_index" =~ ^[0-9]+$ ]] || [ "$author_index" -lt 1 ] || [ "$author_index" -gt ${#authors[@]} ]; then
-   echo "Error: Invalid author number." >&2; exit 1
+   echo "Error: Invalid author number selected or determined: '$author_index'. Please check the author list and your input/config." >&2; exit 1
 fi
 selected_author="${author_map[$author_index]}"
-echo "Selected author: $selected_author"
+echo "Selected author for timesheet: $selected_author"
 
 # --- Commit Retrieval & Processing ---
 echo -e "\nFetching commits for $selected_author on $target_date..."
