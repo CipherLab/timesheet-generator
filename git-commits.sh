@@ -336,8 +336,8 @@ fi
 
 # --- Process Commits ---
 if [ ${#commit_details[@]} -eq 0 ]; then
-    echo "No commits found for '$selected_author' on $target_date."
-    # Print the final clean footer even if no commits
+    echo "No commits found for '$selected_author' on $target_date." >&2 # Print this to stderr for console, not clipboard
+    # Print the original template to stdout for the clipboard
     echo -e "\n╔═════════════════════════════════════════════════════════╗"
     echo -e "║ COMMITS FOR TIMESHEET: $target_date                     "
     echo -e "╚═════════════════════════════════════════════════════════╝"
