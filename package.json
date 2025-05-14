@@ -3,6 +3,7 @@
   "displayName": "Timesheet Generator",
   "description": "Generate timesheet entries from Git commits",
   "version": "0.1.1",
+  "publisher": "cipherlab",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/timesheet-generator.git"
