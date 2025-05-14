@@ -17,8 +17,19 @@ export async function generateTimesheet(
     // Write script to temp file
     fs.writeFileSync(tempScriptPath, scriptContent, { mode: 0o755 });
 
+    let executableScriptPath = tempScriptPath;
+    if (process.platform === "win32") {
+      // Convert Windows path to a path Git Bash can understand
+      executableScriptPath = executableScriptPath.replace(/\\/g, "/");
+      if (/^[a-zA-Z]:/.test(executableScriptPath)) {
+        executableScriptPath = `/${executableScriptPath[0].toLowerCase()}${executableScriptPath.substring(
+          2
+        )}`;
+      }
+    }
+
     // Build the command with optional -f
-    let cmd = `bash "${tempScriptPath}" -r "${repoPath}" -d ${dayOffset}`;
+    let cmd = `bash "${executableScriptPath}" -r "${repoPath}" -d ${dayOffset}`;
     if (forceFetch) {
       cmd += " -f";
     }
