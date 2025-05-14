@@ -22,6 +22,22 @@ A VS Code extension that generates timesheet entries from your Git commits.
 
 - Git must be installed and available in your PATH
 - Your repository should have some commits (shocking, I know)
+- To build and package the extension, you need Node.js and npm installed. You also need `vsce` installed globally (`npm install -g vsce`).
+
+## Building and Installing Locally
+
+If you want to build and install the extension from source:
+
+1. Clone the repository.
+2. Navigate to the project directory in your terminal.
+3. Install dependencies: `npm install`
+4. Compile the project: `npm run compile` (If you encounter a TypeScript error about `suite` or `test`, run `npm install --save-dev @types/mocha` and try compiling again).
+5. Package the extension: `vsce package` (This will create a `.vsix` file in the project directory).
+6. Open VS Code.
+7. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
+8. Search for and select "Extensions: Install from VSIX...".
+9. Navigate to the project directory and select the generated `.vsix` file (`timesheet-generator-X.Y.Z.vsix`, where X.Y.Z is the version).
+10. Reload VS Code if prompted.
 
 ## Extension Settings
 
